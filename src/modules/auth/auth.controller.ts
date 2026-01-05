@@ -7,10 +7,19 @@ import {
   Param,
   Delete,
   Inject,
+  BadGatewayException,
+  InternalServerErrorException,
+  UseGuards,
+  Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { DataLoginDto } from './dto/create-auth.dto';
 import { ClientProxy } from '@nestjs/microservices';
+import { AuthGuard } from '@nestjs/passport';
+import { LocalAuthGuard } from 'src/modules/auth/guard/local-auth.guard';
+import { JwtAuthGuard } from 'src/modules/auth/guard/jwt-auth.guard';
+import { Public } from 'src/common/decorators/canActive';
 
 @Controller('auths')
 export class AuthController {
@@ -18,9 +27,36 @@ export class AuthController {
     private readonly authService: AuthService,
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
   ) {}
+
   @Post()
-  create(@Body() createAuthDto: DataLoginDto) {
-    return this.authClient.send({ cmd: 'auth/login' }, createAuthDto);
+  async create(@Body() createAuthDto: DataLoginDto) {
+    try {
+      return this.authClient.send('auth_login', createAuthDto);
+    } catch (error) {
+      if (error.code == 400) {
+        throw new BadGatewayException(error.message);
+      }
+    }
+    throw new InternalServerErrorException();
+  }
+
+  @Public()
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Request() req) {
+    try {
+      return this.authClient.send('auth_login', req.user);
+    } catch (error) {
+      if (error.code == 400) {
+        throw new BadRequestException(error.message);
+      }
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    return req.user;
   }
 
   @Get()

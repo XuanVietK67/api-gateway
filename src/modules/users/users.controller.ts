@@ -12,7 +12,7 @@ export class UsersController {
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    return this.userClient.send({cmd: 'users/register'}, createUserDto);
+    return this.userClient.send('users_register', createUserDto);
   }
 
   @Get()
