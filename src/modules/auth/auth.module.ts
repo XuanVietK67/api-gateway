@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
@@ -8,6 +6,8 @@ import { LocalStrategy } from 'src/modules/auth/strategy/local.strategy';
 import { JwtStrategy } from 'src/modules/auth/strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { StringValue } from 'ms';
+import { AuthController } from 'src/modules/auth/auth.controller';
+import { AuthService } from 'src/modules/auth/auth.service';
 
 
 @Module({

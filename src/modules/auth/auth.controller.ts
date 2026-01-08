@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Inject,
@@ -13,13 +12,15 @@ import {
   Request,
   BadRequestException,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { DataLoginDto } from './dto/create-auth.dto';
 import { ClientProxy } from '@nestjs/microservices';
-import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from 'src/modules/auth/guard/local-auth.guard';
 import { JwtAuthGuard } from 'src/modules/auth/guard/jwt-auth.guard';
 import { Public } from 'src/common/decorators/canActive';
+import { AuthService } from 'src/modules/auth/auth.service';
+import {
+  DataChangePassword,
+  DataLoginDto,
+} from 'src/modules/auth/dto/create-auth.dto';
 
 @Controller('auths')
 export class AuthController {
@@ -46,6 +47,25 @@ export class AuthController {
   async login(@Request() req) {
     try {
       return this.authClient.send('auth_login', req.user);
+    } catch (error) {
+      if (error.code == 400) {
+        throw new BadRequestException(error.message);
+      }
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('changePassword')
+  changPassword(
+    @Request() req,
+    @Body() dataChangePassword: DataChangePassword,
+  ) {
+    const payload = {
+      user: req.user,
+      data: dataChangePassword,
+    };
+    try {
+      return this.authClient.send('change_password', payload);
     } catch (error) {
       if (error.code == 400) {
         throw new BadRequestException(error.message);
